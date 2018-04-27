@@ -13,10 +13,16 @@
         <li v-for="todo in filteredTodos" :key="todo.id" class="todo">
           <div class="todo-view">
             <input class="toggle" type="checkbox" v-model="todo.completed">
-            <span>{{ todo.title }}</span>
-            <!-- <label @dblclick="editTodo(todo)">{{ todo.title }}</label> -->
+            <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
             <button class="destroy" @click="removeTodo(todo)">X</button>
           </div>
+          <input class="edit" type="text"
+            v-model="todo.title"
+            v-todo-focus="todo === editedTodo"
+            @blur="doneEdit(todo)"
+            @keyup.enter="doneEdit(todo)"
+            @keyup.esc="cancleEdit(todo)"
+          >
         </li>
         <li v-show="filteredTodos.length === 0">Nothing to show</li>
       </ul>
@@ -60,6 +66,8 @@ export default {
       msgTitle: 'ToDoApp',
       newTodo: '',
       visability: 'all',
+      editedTodo: null,
+      beforeEditCache: '',
       todos: todoService.fetch(),
       filters: todoService.filters,
     }
@@ -96,10 +104,36 @@ export default {
     removeTodo: function (todo) {
       this.todos = this.todos.filter(t => t.id !== todo.id)
     },
+    editTodo: function (todo) {
+      this.beforeEditCache = todo.title
+      this.editedTodo = todo
+    },
+    doneEdit: function (todo) {
+      if (!this.editedTodo) {
+        return
+      }
+      this.editedTodo = null
+      todo.title = todo.title.trim()
+      if (!todo.title) {
+        this.removeTodo(todo)
+      }
+    },
+    cancleEdit: function (todo) {
+      console.log('canle')
+      this.editedTodo = null
+      todo.title = this.beforeEditCache
+    },
   },
   filters: {
     pluralize: function (n) {
       return n > 1 ? 'item' : 'items'
+    },
+  },
+  directives: {
+    'todo-focus': function (el, binding) {
+      if (binding.value) {
+        el.focus()
+      }
     },
   },
 }
@@ -118,17 +152,16 @@ export default {
   }
  .todo-list {
    border: 1px solid black;
- }
-
- .todo-list li {
-   padding: 5px;
- }
+  }
 
  .todo-list li + li {
    border-top: 1px solid black;
  }
 
  .todo-view {
+   padding: 5px;
+   z-index: 2;
+   background-color: #fff;
    display: flex;
    justify-content: space-between;
  }
@@ -153,5 +186,22 @@ export default {
  .destroy {
    background: none;
    border: none;
+ }
+
+ .todo {
+   position: relative;
+ }
+
+.edit {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 80%;
+  padding-left: 10px;
+  z-index: -1;
+}
+
+ .edit:focus {
+   z-index: 1;
  }
 </style>
