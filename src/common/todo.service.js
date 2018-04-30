@@ -1,16 +1,24 @@
 const STORAGE_KEY = 'todos-vuejs-2.0'
 
-export const todoService = {
+export const TodoService = {
   fetch: function () {
-    const todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    todos.forEach(function (todo, index) {
-      todo.id = index
+    return new Promise((resolve) => {
+      const todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+      todos.forEach(function (todo, index) {
+        todo.id = index
+      })
+      TodoService.uid = todos.length
+      resolve({
+        todos,
+        todosCount: TodoService.uid,
+      })
     })
-    todoService.uid = todos.length
-    return todos
   },
   save: function (todos) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+    return new Promise((resolve) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+      resolve()
+    })
   },
   filters: [
     { value: 'all', label: 'All' },

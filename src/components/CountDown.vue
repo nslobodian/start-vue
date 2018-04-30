@@ -6,23 +6,13 @@
 
 <script>
 import differenceInSeconds from 'date-fns/difference_in_seconds'
-import endOfToday from 'date-fns/end_of_today'
-
-const today = () => new Date()
-
-function addLeadingZeros (number, targetLength = 2) {
-  let output = Math.abs(number).toString()
-  while (output.length < targetLength) {
-    output = '0' + output
-  }
-  return output
-}
+import { today, addLeadingZeros } from '../common/time.service'
 
 export default {
   name: 'CountDown',
   data () {
     return {
-      time: differenceInSeconds(endOfToday(), today()),
+      time: differenceInSeconds(today()),
     }
   },
   created: function () {

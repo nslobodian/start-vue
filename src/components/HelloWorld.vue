@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>{{ msgTitle }}  <strong>{{ remaining }}</strong> {{ remaining | pluralize }} left</h1>
+    <h1><strong>{{ remaining }}</strong> {{ remaining | pluralize }} left</h1>
     <div>
       <input class="new-todo"
         autofocus autocomplete="off"
@@ -18,7 +18,7 @@
           </div>
           <input class="edit" type="text"
             v-model="todo.title"
-            v-todo-focus="todo === editedTodo"
+            v-todo-focus="todo.id === editedTodo"
             @blur="doneEdit(todo)"
             @keyup.enter="doneEdit(todo)"
             @keyup.esc="cancleEdit(todo)"
@@ -29,7 +29,7 @@
     </div>
     <div>
       <ul class="filters">
-        <li v-for="filter in filters" :key="filter.value">
+        <li v-for="filter in todosFilters" :key="filter.value">
           <div>
             <input class="toggle" type="radio" v-model="visability" :value="filter.value" :id="filter.value">
             <label :for="filter.value" :class="{ checked: visability === filter.value }">{{filter.label}}</label>
@@ -41,52 +41,35 @@
 </template>
 
 <script>
-import { todoService } from '../common/todo.service'
-
-const filters = {
-  all: function (todos) {
-    return todos
-  },
-  active: function (todos) {
-    return todos.filter(function (todo) {
-      return !todo.completed
-    })
-  },
-  completed: function (todos) {
-    return todos.filter(function (todo) {
-      return todo.completed
-    })
-  },
-}
+// import { todoService } from '../common/todo.service'
+import { mapGetters, mapState } from 'vuex'
+import { FETCH_TODO, ADD_TODO, REMOVE_TODO, EDIT_TODO } from '../store/action.types'
 
 export default {
   name: 'HelloWorld',
   data () {
     return {
-      msgTitle: 'ToDoApp',
       newTodo: '',
-      visability: 'all',
-      editedTodo: null,
-      beforeEditCache: '',
-      todos: todoService.fetch(),
-      filters: todoService.filters,
+      // visability: 'all',
+      // editedTodo: null,
+      // beforeEditCache: '',
+      // todos: todoService.fetch(),
+      // filters: todoService.filters,
     }
   },
-  computed: {
-    remaining: function () {
-      return filters.active(this.todos).length
-    },
-    filteredTodos: function () {
-      return filters[this.visability](this.todos)
-    },
+  mounted () {
+    this.$store.dispatch(FETCH_TODO)
   },
-  watch: {
-    todos: {
-      handler: function (todos) {
-        todoService.save(todos)
-      },
-      deep: true,
-    },
+  computed: {
+    ...mapState([
+      'todosFilters',
+      'todos',
+      'editedTodo',
+    ]),
+    ...mapGetters([
+      'remaining',
+      'filteredTodos',
+    ]),
   },
   methods: {
     addTodo: function () {
@@ -94,35 +77,30 @@ export default {
       if (!value) {
         return
       }
-      this.todos.push({
-        id: todoService.uid++,
-        title: value,
-        completed: false,
-      })
+      this.$store.dispatch(ADD_TODO, value)
       this.newTodo = ''
     },
     removeTodo: function (todo) {
-      this.todos = this.todos.filter(t => t.id !== todo.id)
+      this.$store.dispatch(REMOVE_TODO, todo)
     },
     editTodo: function (todo) {
-      this.beforeEditCache = todo.title
-      this.editedTodo = todo
+      this.$store.commit(EDIT_TODO, todo)
     },
-    doneEdit: function (todo) {
-      if (!this.editedTodo) {
-        return
-      }
-      this.editedTodo = null
-      todo.title = todo.title.trim()
-      if (!todo.title) {
-        this.removeTodo(todo)
-      }
-    },
-    cancleEdit: function (todo) {
-      console.log('canle')
-      this.editedTodo = null
-      todo.title = this.beforeEditCache
-    },
+    // doneEdit: function (todo) {
+    //   if (!this.editedTodo) {
+    //     return
+    //   }
+    //   this.editedTodo = null
+    //   todo.title = todo.title.trim()
+    //   if (!todo.title) {
+    //     this.removeTodo(todo)
+    //   }
+    // },
+    // cancleEdit: function (todo) {
+    //   console.log('canle')
+    //   this.editedTodo = null
+    //   todo.title = this.beforeEditCache
+    // },
   },
   filters: {
     pluralize: function (n) {
