@@ -9,10 +9,11 @@
         @keyup.enter="addTodo">
       </div>
     <div>
+      {{editedTodo}} - test
       <ul class="todo-list">
         <li v-for="todo in filteredTodos" :key="todo.id" class="todo">
           <div class="todo-view">
-            <input class="toggle" type="checkbox" v-model="todo.completed">
+            <input class="toggle" type="checkbox" v-model="todo.completed" @change="saveTodo">
             <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
             <button class="destroy" @click="removeTodo(todo)">X</button>
           </div>
@@ -43,18 +44,13 @@
 <script>
 // import { todoService } from '../common/todo.service'
 import { mapGetters, mapState } from 'vuex'
-import { FETCH_TODO, ADD_TODO, REMOVE_TODO, EDIT_TODO } from '../store/action.types'
+import { FETCH_TODO, ADD_TODO, REMOVE_TODO, EDIT_TODO, SAVE_TODO } from '../store/action.types'
 
 export default {
   name: 'HelloWorld',
   data () {
     return {
       newTodo: '',
-      // visability: 'all',
-      // editedTodo: null,
-      // beforeEditCache: '',
-      // todos: todoService.fetch(),
-      // filters: todoService.filters,
     }
   },
   mounted () {
@@ -84,23 +80,26 @@ export default {
       this.$store.dispatch(REMOVE_TODO, todo)
     },
     editTodo: function (todo) {
-      this.$store.commit(EDIT_TODO, todo)
+      this.$store.dispatch(EDIT_TODO, todo)
     },
-    // doneEdit: function (todo) {
-    //   if (!this.editedTodo) {
-    //     return
-    //   }
-    //   this.editedTodo = null
-    //   todo.title = todo.title.trim()
-    //   if (!todo.title) {
-    //     this.removeTodo(todo)
-    //   }
-    // },
-    // cancleEdit: function (todo) {
-    //   console.log('canle')
-    //   this.editedTodo = null
-    //   todo.title = this.beforeEditCache
-    // },
+    saveTodo: function () {
+      this.$store.dispatch(SAVE_TODO)
+    },
+    doneEdit: function (todo) {
+      if (!this.editedTodo) {
+        return
+      }
+      this.editedTodo = null
+      todo.title = todo.title.trim()
+      if (!todo.title) {
+        this.removeTodo(todo)
+      }
+    },
+    cancleEdit: function (todo) {
+      console.log('canle')
+      this.editedTodo = null
+      todo.title = this.beforeEditCache
+    },
   },
   filters: {
     pluralize: function (n) {
